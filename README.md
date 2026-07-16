@@ -1,39 +1,16 @@
-# Sales Ops Demo — Lead Management & Automation for a Solar Sales Team
+# React + Vite
 
-> 🚧 Work in progress — live demo link coming soon.
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-## Why I built this
+Currently, two official plugins are available:
 
-Preparing for a Sales Tools & Automation role at Enpal, I wanted to go beyond
-saying "I can learn these tools quickly" — so I built a working mini
-lead-management system using the exact stack from the job description:
-**React, Airtable, Make.com, and custom serverless scripts**, developed with
-AI-assisted tooling.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## What it does
+## React Compiler
 
-- **Lead intake with data quality gates** — a React form posts to a Make.com
-  webhook that validates payloads, deduplicates leads by email, and routes
-  broken data into a `Failed_Intake` table with alerting. No silent failures.
-- **Automatic lead scoring & prioritization** — consumption, battery/heat-pump
-  interest, roof orientation and lead source feed a scoring formula; leads are
-  tiered Hot / Warm / Cold.
-- **Territory auto-assignment** — leads are routed to regional reps by postal
-  code (Berlin / Hamburg / München), mirroring a distributed installer org.
-- **Tiered SLA watchdog** — in residential solar, speed-to-lead decides
-  conversion: hot leads escalate after 15 minutes, others after 2 hours,
-  enforced by a scheduled Make.com scenario.
-- **Order lifecycle** — won deals automatically create orders whose status
-  machine ends at `OnePlus_Activated`, not `Installed` — because energy
-  management activation depends on grid operator approval.
-- **Mock external-CRM sync + reconciliation** — won deals sync to a mock CRM
-  table; a reconciliation scenario compares record counts and flags drift.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Stack
+## Expanding the Oxlint configuration
 
-React (Vite) · Tailwind · dnd-kit · Airtable · Make.com · Vercel serverless
-
-## Docs
-
-- [Architecture & design decisions](docs/ARCHITECTURE.md)
-- [Work log & debugging notes](docs/WORKLOG.md)
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
