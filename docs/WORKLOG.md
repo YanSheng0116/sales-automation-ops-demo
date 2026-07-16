@@ -1,11 +1,11 @@
 # Work Log
 
-## Day 0 — Setup (Jul 15)
+## Setup
 
 Accounts: Airtable (free), Make.com (**EU region** — deliberate choice, German
 customer data), Vercel, GitHub repo. Toolchain: VS Code + AI-assisted coding.
 
-## Day 1 — Airtable data model (Jul 16)
+## Airtable data model
 
 Built base `Enpal Sales demo` with 4 tables: `Leads` (14 input fields + 6
 formula fields), `Orders` (status machine ending at `OnePlus_Activated`),
@@ -24,7 +24,7 @@ Schema hygiene lesson: caught and fixed two typos (`Emali` → `Email`,
 `Faild_Intake` → `Failed_Intake`) before they poisoned every downstream
 mapping. Clean inputs start at field naming.
 
-## Day 2 — Make.com core scenario (Jul 16)
+## Make.com core scenario
 
 Scenario **Lead Intake** (active): webhook → filter (email contains @) →
 search by email → router:
@@ -53,7 +53,7 @@ search by email → router:
    that functions render as structured tokens and `plz` as a mapped pill.
 5. **Copied a placeholder URL into curl** — `Not found`. Read before paste.
 
-## Day 3 — Watchdog & reconciliation (Jul 17)
+## Watchdog & reconciliation
 
 - Scenario **SLA Watchdog** (active, every 15 min): finds
   `New` leads past their tier deadline that were never contacted and never
@@ -62,6 +62,62 @@ search by email → router:
   CRM records, emails the comparison. Kept manual by design — the free plan
   allows 2 active scenarios, so real-time flows got the slots; in production
   this would be a nightly job.
+## (cont.) — Frontend foundation
 
-Next: React frontend (call queue, kanban, intake form) + Vercel serverless
-proxy + deployment.
+- Initialized Vite + React in the repo root, wired Tailwind v4 via the
+  official Vite plugin.
+- Created Airtable personal access token with minimal scope
+  (`data.records:read/write`, single base only).
+- Built first serverless function `api/leads.js`: a thin proxy that reads
+  the Leads table and flattens `{id, fields}` into plain objects. The token
+  lives in environment variables and never reaches the browser.
+- Ran the stack locally with `vercel dev` (frontend + serverless together);
+  Vercel project created and linked.
+- First UI: live lead list rendering all 13 records with priority badges.
+
+**Security incident (caught):** almost pasted the real Airtable token into
+`.env.example` — the file that *does* get committed. Fixed before pushing;
+verified GitHub history is clean. Also mistyped `vercel env add <value>`
+(the CLI takes the variable *name*, then prompts for the value). Lessons:
+secrets only ever live in `.env` / platform env vars, and `git status`
+review before every commit is non-negotiable.
+
+
+## Full frontend & closed loop
+
+Built the complete sales workbench UI:
+
+- **StatsBar** — active leads, hot count, SLA-overdue count, and annual
+  pipeline value (sum of monthly rent × 12 across active leads).
+- **CallQueue ("next best lead")** — priority-sorted top 5, urgency =
+  lead score + a 100-point boost for SLA-overdue new leads, so breaches
+  always surface first. One-click "Mark contacted" writes `Status` and
+  `Last_Contacted` back via the serverless PATCH endpoint.
+- **KanbanBoard (dnd-kit)** — six status columns, drag-and-drop updates
+  Airtable. Dragging a card into *Won* triggers the native Airtable
+  automation → order created + mock-CRM sync. Three layers of the system
+  fire from a single drag.
+- **NewLeadModal** — posts directly to the Make webhook and renders the
+  returned score/priority/assignment/pricing as a result card. Duplicate
+  submissions get a distinct "Duplicate lead" state instead of a silent
+  failure.
+- All mutations use **optimistic updates with rollback**: UI changes
+  first, API follows, state reverts on failure.
+
+### Debugging diary (cont.)
+
+6. **"Webhook unreachable" in the lead form** — `vercel env pull` had
+   generated `.env.local` containing only the two Airtable variables, and
+   Vite gives `.env.local` precedence over `.env`, so
+   `VITE_MAKE_WEBHOOK_URL` silently resolved to `undefined`. Fix: added
+   the variable to `.env.local` *and* registered it in Vercel across all
+   environments (`vercel env add`, dev/preview/production) so future
+   pulls and the production deployment stay consistent. Lesson: know your
+   tool's env-file precedence order, and keep the platform the single
+   source of truth for env vars.
+
+**End-to-end loop verified:** React form → Make webhook (validate,
+dedupe) → Airtable (create, score, assign by postal code) → serverless
+proxy → UI refresh, with email notification and duplicate rejection.
+The demo is functionally complete. Next: production deployment on
+Vercel, final README with the live URL, Loom walkthrough.
